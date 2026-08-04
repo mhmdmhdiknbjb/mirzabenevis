@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<script src="https://hamdast.paziresh24.com/sdk/hamdast.js"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>دستیار پرونده‌نویسی هوشمند</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&display=swap" rel="stylesheet">
+
+
+<style>
+  :root{
+    --bg: oklch(0.972 0.006 220);
+    --surface: oklch(0.995 0.002 220);
+    --ink: oklch(0.24 0.035 232);
+    --ink-soft: oklch(0.525 0.024 234);
+    --line: oklch(0.918 0.009 226);
+    --accent: oklch(0.545 0.088 178);
+    --accent-soft: oklch(0.955 0.024 178);
+    --warn: oklch(0.735 0.135 68);
+    --warn-soft: oklch(0.965 0.038 78);
+    --danger: oklch(0.585 0.215 27);
+    --danger-soft: oklch(0.962 0.024 22);
+    --danger-ink: oklch(0.45 0.15 22);
+    --primary: oklch(0.335 0.062 231);
+    --radius: 14px;
+    --shadow-card: 0 1px 1px oklch(0.24 0.035 232 / 0.04), 0 4px 14px -6px oklch(0.24 0.035 232 / 0.1);
+    font-family: 'Vazirmatn', 'IRANSans', Tahoma, sans-serif;
+    font-feature-settings: "ss02";
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    min-height:100vh; padding:24px 16px 60px;
+  }
+  .wrap{max-width:640px; margin:0 auto;}
+  header{margin-bottom:20px;}
+  header h1{font-size:19px; font-weight:700; margin:0 0 4px;}
+  header p{font-size:13px; color:var(--ink-soft); margin:0;}
+
+  .card{
+    background:var(--surface); border:1px solid var(--line);
+    border-radius:var(--radius); padding:18px; margin-bottom:16px;
+    box-shadow:var(--shadow-card);
+  }
+  .status-row{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink-soft);}
+  .dot{width:8px; height:8px; border-radius:50%; background:#c8d3ce; flex-shrink:0;}
+  .dot.ok{background:var(--accent);}
+  .dot.bad{background:var(--warn);}
+
+  .rec-row{display:flex; align-items:center; gap:12px; margin-top:14px;}
+  button{
+    font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;
+    border-radius:8px; border:1px solid transparent; padding:10px 18px;
+    transition:filter .15s ease, transform .05s ease;
+  }
+  button:active{transform:scale(.98);}
+  button:disabled{opacity:.5; cursor:not-allowed;}
+  .btn-primary{background:var(--accent); color:#fff;}
+  .btn-primary:hover:not(:disabled){filter:brightness(1.08);}
+  .btn-danger{background:var(--danger); color:#fff;}
+  .btn-ghost{background:transparent; color:var(--ink-soft); border-color:var(--line);}
+  .btn-ghost:hover:not(:disabled){background:var(--accent-soft); color:var(--accent);}
+
+  .timer{font-variant-numeric: tabular-nums; font-size:14px; color:var(--ink-soft); min-width:48px;}
+  input[type=file]{font-size:13px;}
+
+  .divider-label{
+    display:flex; align-items:center; gap:10px; margin:16px 0; font-size:12px; color:var(--ink-soft);
+  }
+  .divider-label::before, .divider-label::after{content:""; flex:1; height:1px; background:var(--line);}
+
+  textarea, input[type=text]{
+    width:100%; font-family:inherit; font-size:13.5px; color:var(--ink);
+    border:1px solid var(--line); border-radius:8px; padding:10px 12px;
+    background:#fcfdfc; resize:vertical;
+  }
+  textarea:focus, input:focus{outline:2px solid var(--accent); outline-offset:1px;}
+  label.field-label{display:block; font-size:12.5px; font-weight:700; color:var(--ink-soft); margin:14px 0 6px;}
+
+  .drug-item{
+    border:1px dashed var(--line); border-radius:8px; padding:10px; padding-top:26px; margin-bottom:10px;
+    display:grid; grid-template-columns:1fr 1fr; gap:6px; position:relative;
+  }
+  .drug-item input{grid-column: span 2;}
+  .drug-item input[data-field="nam"]{grid-column: 1 / -1; font-weight:700;}
+  .drug-field-wrap{display:flex; flex-direction:column; gap:3px;}
+  .drug-field-wrap label{font-size:10.5px; font-weight:700; color:var(--ink-soft);}
+  .drug-field-wrap input{grid-column: unset;}
+  .drug-remove{
+    position:absolute; top:6px; left:8px; background:transparent; border:none;
+    color:var(--ink-soft); font-size:13px; cursor:pointer; padding:2px 6px; line-height:1;
+  }
+  .drug-remove:hover{color:var(--danger);}
+
+  .tag-list{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;}
+  .tag{
+    background:var(--accent-soft); color:var(--accent); font-size:12px;
+    padding:4px 6px 4px 10px; border-radius:999px; display:inline-flex; align-items:center; gap:6px;
+  }
+  .tag.warn{background:var(--warn-soft); color:var(--ink);}
+  .tag-remove{
+    background:rgba(0,0,0,.08); border:none; border-radius:50%; width:16px; height:16px;
+    font-size:9px; line-height:1; color:inherit; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    padding:0; flex-shrink:0;
+  }
+  .tag-remove:hover{background:rgba(0,0,0,.18);}
+
+  .confirm-check{
+    display:flex; align-items:flex-start; gap:8px; margin-top:16px; padding:10px 12px;
+    background:var(--bg); border:1px solid var(--line); border-radius:8px;
+    font-size:12.5px; color:var(--ink-soft); cursor:pointer; line-height:1.6;
+  }
+  .confirm-check input{width:16px; height:16px; margin-top:2px; flex-shrink:0; accent-color:var(--accent);}
+
+
+  .sms-status{
+    font-size:12px; margin-top:8px; padding:8px 10px; border-radius:8px; display:flex; align-items:center; gap:6px;
+  }
+  .sms-status.ok{background:var(--accent-soft); color:var(--accent);}
+  .sms-status.bad{background:var(--danger-soft); color:var(--danger-ink);}
+
+  .error-box{
+    background:var(--danger-soft); border:1px solid var(--danger); color:var(--danger-ink);
+    border-radius:8px; padding:12px; font-size:13px; margin-top:12px;
+  }
+  .hint{font-size:11.5px; color:#8a9a92; margin-top:4px;}
+  .hidden{display:none !important;}
+
+  /* قرص وضعیت اتصال */
+  .status-pill{
+    display:inline-flex; align-items:center; gap:8px; padding:9px 16px;
+    border-radius:999px; background:var(--bg); border:1px solid var(--line);
+    color:var(--ink-soft); font-size:12.5px; font-weight:600; margin-bottom:16px;
+  }
+  .status-pill.ok{background:var(--accent-soft); color:var(--accent); border-color:transparent;}
+  .status-pill.bad{background:var(--danger-soft); color:var(--danger-ink); border-color:transparent;}
+
+  /* سربرگ کارت با نشان شماره */
+  .card-head{display:flex; align-items:center; gap:10px; margin-bottom:16px;}
+  .step-badge{
+    width:26px; height:26px; border-radius:50%; background:var(--primary); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:12.5px; font-weight:700; flex-shrink:0;
+  }
+  .card-title{font-size:15px; font-weight:700; margin:0; flex:1;}
+  .card-tag{
+    font-size:11px; color:var(--ink-soft); background:var(--bg); border:1px solid var(--line);
+    padding:3px 10px; border-radius:999px; white-space:nowrap;
+  }
+
+  /* دکمه‌ی اصلی ضبط — قرص بزرگ تیره */
+  .btn-record-main{
+    width:100%; border-radius:999px; padding:15px 20px; font-size:15px;
+    display:flex; align-items:center; justify-content:center; gap:10px;
+  }
+  .btn-record-main.btn-primary{background:var(--primary); color:#fff;}
+  .btn-record-main.btn-danger{background:var(--danger); color:#fff;}
+  .btn-record-main::before{
+    content:""; width:9px; height:9px; border-radius:50%; background:#fff; flex-shrink:0;
+  }
+
+  /* باکس آپلود فایل */
+  .upload-dropzone{
+    display:flex; align-items:center; gap:12px; border:1px solid var(--line);
+    border-radius:var(--radius); padding:14px; cursor:pointer; background:var(--surface);
+    transition:border-color .15s ease, background-color .15s ease;
+  }
+  .upload-dropzone:hover{border-color:var(--accent); background:var(--accent-soft);}
+  .upload-icon{
+    width:36px; height:36px; border-radius:50%; background:var(--accent-soft); color:var(--accent);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:15px;
+  }
+  .upload-text{display:flex; flex-direction:column; gap:2px;}
+  .upload-text strong{font-size:13.5px; font-weight:700;}
+
+  /* باکس هشدار با آیکون و دکمه‌ی بستن */
+  .error-box{
+    display:flex; align-items:flex-start; gap:10px;
+    background:var(--warn-soft); border:1px solid var(--warn); color:var(--ink);
+    border-radius:var(--radius); padding:12px 14px; font-size:13px; margin-top:12px;
+  }
+  .warn-icon{flex-shrink:0; font-size:14px;}
+  .warn-text{flex:1; line-height:1.7;}
+  .warn-dismiss{
+    background:none; border:none; color:var(--ink-soft); text-decoration:underline;
+    font-size:12px; cursor:pointer; padding:0; flex-shrink:0;
+  }
+  .date-field-wrap{position:relative; display:flex; gap:6px;}
+  .date-field-wrap input{flex:1;}
+  .btn-calendar{flex-shrink:0; width:38px; padding:0; font-size:16px; background:var(--accent-soft); color:var(--accent); border:1px solid var(--line);}
+  .jalali-calendar{position:absolute; top:calc(100% + 6px); left:0; z-index:50; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); box-shadow:0 8px 24px rgba(15,40,30,.14); padding:12px; width:270px;}
+  .jc-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;}
+  .jc-header button{background:transparent; border:none; color:var(--accent); font-size:16px; padding:4px 10px; cursor:pointer;}
+  .jc-header span{font-size:13px; font-weight:700;}
+  .jc-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:3px; text-align:center;}
+  .jc-grid .jc-dow{font-size:10.5px; color:var(--ink-soft); padding:4px 0; font-weight:700;}
+  .jc-grid button{background:transparent; border:none; border-radius:6px; padding:6px 0; font-size:12.5px; cursor:pointer; color:var(--ink);}
+  .jc-grid button:hover{background:var(--accent-soft);}
+  .jc-grid button.jc-today{border:1px solid var(--accent);}
+  .jc-grid button.jc-empty{visibility:hidden; cursor:default;}
+  .jc-footer{display:flex; justify-content:space-between; margin-top:8px;}
+  .jc-footer button{font-size:11.5px; background:transparent; border:none; color:var(--ink-soft); cursor:pointer;}
+  .spinner{
+    width:16px;height:16px;border-radius:50%;
+    border:2px solid rgba(255,255,255,.4); border-top-color:#fff;
+    animation:spin .7s linear infinite; display:inline-block; vertical-align:-3px;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .patient-card-item{
+    border:1px solid var(--line); border-radius:10px; padding:12px 14px;
+    cursor:pointer; background:var(--surface); transition:border-color .15s, background .15s;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .patient-card-item:hover{border-color:var(--accent); background:var(--accent-soft);}
+  .patient-card-item.selected{border-color:var(--accent); background:var(--accent-soft); box-shadow:0 0 0 2px var(--accent);}
+  .patient-card-item .p-name{font-size:14px; font-weight:700; margin-bottom:3px;}
+  .patient-card-item .p-meta{font-size:12px; color:var(--ink-soft);}
+  .patient-card-item .p-time{font-size:12px; color:var(--accent); font-weight:600; white-space:nowrap;}
+  .patient-empty{font-size:13px; color:var(--ink-soft); text-align:center; padding:20px 0;}
+  .prev-record-item{
+    border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:10px;
+    background:var(--surface); box-shadow:var(--shadow-card);
+  }
+  .prev-record-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;}
+  .prev-record-date{font-size:11.5px; color:var(--ink-soft); font-weight:600;}
+  .prev-record-section-title{font-size:11px; font-weight:700; color:var(--accent); margin:8px 0 4px; text-transform:uppercase;}
+  .prev-record-text{font-size:12.5px; color:var(--ink); line-height:1.7; white-space:pre-wrap;}
+  .prev-record-moraje{font-size:12.5px; color:var(--ink); background:var(--accent-soft); border-radius:6px; padding:6px 10px; margin-top:4px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>میرزابنویس — دستیار پرونده‌نویسی هوشمند</h1>
+    <p style="font-size:13px; color:var(--ink-soft); line-height:1.8; margin:0;">
+      بعد از پایان ویزیت، خلاصه‌ای یک‌دقیقه‌ای از موارد زیر بگویید:<br>
+      <strong>شکایت اصلی</strong> — <strong>یافته‌های معاینه</strong> — <strong>تشخیص</strong> — <strong>داروها و دوز</strong> — <strong>آزمایش‌ها</strong> — <strong>تاریخ مراجعه بعد</strong><br>
+      سپس دکمه توقف را بزنید تا پرونده به‌صورت خودکار آماده شود.
+    </p>
+  </header>
+
+  <div class="status-pill" id="status-pill">
+    <span id="auth-status">در حال اتصال به پذیرش۲۴...</span>
+    <span id="auth-dot" class="dot"></span>
+  </div>
+
+  <div class="card hidden" id="patient-card">
+    <div class="card-head">
+      <span class="step-badge">۰</span>
+      <h2 class="card-title">انتخاب بیمار</h2>
+      <span class="card-tag">نوبت‌های امروز</span>
+    </div>
+    <label class="field-label">مرکز درمانی</label>
+    <select id="center-select" style="width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:8px; font-family:inherit; font-size:13px; background:var(--surface); color:var(--ink);"></select>
+    <label class="field-label" style="margin-top:14px;">جستجوی بیمار</label>
+    <input type="text" id="patient-search" placeholder="نام، نام خانوادگی یا موبایل..." style="margin-bottom:10px;" />
+    <div id="patient-list" style="display:flex; flex-direction:column; gap:8px; max-height:320px; overflow-y:auto;"></div>
+    <div class="hint" style="margin-top:8px;">یادداشت نهایی پس از تأیید پزشک می‌تواند به گفتگوی همین نوبت برای بیمار ارسال شود.</div>
+    <div id="prev-records-section" class="hidden" style="margin-top:14px;">
+      <div style="font-size:12.5px; font-weight:700; color:var(--ink-soft); margin-bottom:8px;">پرونده‌های قبلی این بیمار</div>
+      <div id="prev-records-list"></div>
+    </div>
+  </div>
+
+  <div class="card" id="input-card">
+    <div class="card-head">
+      <span class="step-badge">۱</span>
+      <h2 class="card-title">ورودی صدای ویزیت</h2>
+      <span class="card-tag">حداکثر ۱۵ دقیقه</span>
+    </div>
+    <button id="btn-connect" class="btn-primary" style="width:100%; margin-bottom:10px;">اتصال به پذیرش۲۴</button>
+    <div class="rec-row">
+      <button id="btn-record" class="btn-primary btn-record-main" disabled>شروع ضبط</button>
+      <span id="timer" class="timer">۰۰:۰۰</span>
+    </div>
+    <div class="divider-label">یا</div>
+    <label for="file-input" class="upload-dropzone">
+      <span class="upload-icon">⬆</span>
+      <span class="upload-text">
+        <strong>آپلود فایل صوتی</strong>
+        <span class="hint">فرمت‌های مجاز: m4a, mp3, wav — حداکثر حجم طبق تنظیمات سرور.</span>
+      </span>
+    </label>
+    <input type="file" id="file-input" accept="audio/*" class="hidden" />
+
+    <button id="btn-submit" class="btn-primary" style="margin-top:14px; width:100%;" disabled>
+      تبدیل به پرونده
+    </button>
+    <div id="error-box" class="error-box hidden"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <div class="card-head">
+      <span class="step-badge">۲</span>
+      <h2 class="card-title">پیش‌نویس پرونده</h2>
+      <span class="card-tag">قابل ویرایش</span>
+    </div>
+    <div class="status-pill ok" style="margin-bottom:14px;">
+      <span>پیش‌نویس آماده شد — قبل از ذخیره بازبینی کن</span>
+    </div>
+    <div id="selected-patient-box" class="hidden" style="background:var(--accent-soft); border:1px solid var(--accent); border-radius:10px; padding:12px 14px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between;">
+      <div>
+        <div style="font-size:13px; font-weight:700;" id="sp-name"></div>
+        <div style="font-size:12px; color:var(--ink-soft);" id="sp-meta"></div>
+      </div>
+      <div style="font-size:12px; color:var(--accent); font-weight:600;" id="sp-time"></div>
+    </div>
+
+    <label class="field-label">یادداشت پزشک</label>
+    <textarea id="f-yaddasht" rows="4"></textarea>
+
+    <label class="field-label">خلاصه برای بیمار</label>
+    <textarea id="f-khaleseh-bimar" rows="4"></textarea>
+
+    <label class="field-label">داروها</label>
+    <div id="drug-list"></div>
+    <button id="btn-add-drug" class="btn-ghost" type="button">+ افزودن دارو</button>
+
+    <label class="field-label">تاریخ مراجعه بعد</label>
+    <div class="date-field-wrap">
+      <input type="text" id="f-tarikh" placeholder="مثلاً ۱۴۰۴/۰۸/۱۰ یا «دو هفته دیگر»" />
+      <button type="button" id="btn-open-calendar" class="btn-calendar" aria-label="باز کردن تقویم">📅</button>
+      <div id="jalali-calendar" class="jalali-calendar hidden"></div>
+    </div>
+
+    <label class="field-label">آزمایش‌های پیگیری</label>
+    <div id="azmayeshat-tags" class="tag-list"></div>
+    <div style="display:flex; gap:6px; margin-top:6px;">
+      <input type="text" id="azmayesh-input" placeholder="آزمایش جدید..." style="flex:1;" />
+      <button type="button" id="btn-add-azmayesh" class="btn-ghost" style="flex-shrink:0;">+ افزودن</button>
+    </div>
+
+    <label class="field-label">علائم هشدار</label>
+    <div id="alaem-tags" class="tag-list"></div>
+    <div style="display:flex; gap:6px; margin-top:6px;">
+      <input type="text" id="alaem-input" placeholder="علامت هشدار جدید..." style="flex:1;" />
+      <button type="button" id="btn-add-alaem" class="btn-ghost" style="flex-shrink:0;">+ افزودن</button>
+    </div>
+
+    <label class="field-label">خلاصه مراجعه بعد</label>
+    <textarea id="f-khaleseh-moraje" rows="3"></textarea>
+
+
+
+    <label class="field-label">ارسال یادداشت به گفتگوی بیمار در پذیرش۲۴</label>
+    <div id="no-patient-warn" class="error-box" style="margin-bottom:8px;">
+      <span class="warn-icon">⚠</span>
+      <span class="warn-text">برای ارسال به گفتگو، ابتدا یک بیمار از کارت «انتخاب بیمار» انتخاب کنید.</span>
+    </div>
+    <button type="button" id="btn-send-chat" class="btn-ghost" style="width:100%;" disabled>ارسال به گفتگوی بیمار</button>
+    <div id="chat-status" class="sms-status hidden"></div>
+
+    <label class="confirm-check">
+      <input type="checkbox" id="chk-doctor-review" />
+      <span>این پرونده را بازبینی کردم و صحت اطلاعات آن را تأیید می‌کنم.</span>
+    </label>
+
+    <div class="rec-row" style="margin-top:12px;">
+      <button id="btn-confirm" class="btn-primary" disabled>تأیید و ذخیره در پرونده</button>
+      <button id="btn-discard" class="btn-ghost" type="button">لغو و ضبط دوباره</button>
+      <button id="btn-next-visit" class="btn-ghost" type="button">ویزیت بعدی ←</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  const CONFIG = {
+    HAMDAST_APP_KEY: "mirzabnois", // از کنسول همدست
+    BACKEND_BASE_URL: "https://api.trend-chie.ir", // بک‌اندی که در مرحله ۱ ساختیم
+    REQUIRED_SCOPES: ["provider.appointment.read", "provider.profile.read", "provider.rasan.read", "provider.rasan.write", "provider.prescription.read", "provider.prescription.write"], // لازم برای انتخاب بیمار + پیامک
+  };
+
+  const el = (id) => document.getElementById(id);
+  const state = { accessToken: null, mediaRecorder: null, chunks: [], recording: false, timerHandle: null, seconds: 0, pickedFile: null, lastNote: null, selectedAppointment: null };
+
+
+  async function authenticate() {
+    try {
+      if (!window.hamdast) throw new Error("SDK همدست بارگذاری نشد.");
+
+      window.hamdast.initialize({ app_key: CONFIG.HAMDAST_APP_KEY });
+      const sessionToken = await window.hamdast.getSessionToken({ scope: CONFIG.REQUIRED_SCOPES });
+
+      const resp = await fetch(`${CONFIG.BACKEND_BASE_URL}/api/v1/auth/session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_token: sessionToken }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data?.detail?.message || "خطا در احراز هویت.");
+
+      state.accessToken = data.access_token;
+      setAuthStatus(true, "متصل به پذیرش۲۴");
+      el("btn-record").disabled = false;
+      loadPatients().catch(e => console.error("loadPatients FAILED:", e));
+    } catch (err) {
+      console.error(err);
+      setAuthStatus(false, "اتصال ناموفق — لطفاً صفحه را رفرش کن یا دوباره وارد شو."); console.error("authenticate catch:", err);
+    }
+  }
+
+  function setAuthStatus(ok, text) {
+    el("auth-dot").className = "dot " + (ok ? "ok" : "bad");
+    el("auth-status").textContent = text;
+    el("status-pill").className = "status-pill" + (ok ? " ok" : " bad");
+  }
+
+  // ---------------------------------------------------------------
+  // انتخاب بیمار — بارگذاری مراکز درمانی و نوبت‌های امروز
+  // ---------------------------------------------------------------
+  async function apiGet(path) {
+    const resp = await fetch(`${CONFIG.BACKEND_BASE_URL}${path}`, {
+      headers: { Authorization: `Bearer ${state.accessToken}` },
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data?.detail?.message || "خطا در دریافت اطلاعات از پذیرش۲۴.");
+    return data;
+  }
+
+  function addMockPatient() {
+    const mockPatient = { appointment_id: 99999, name: "علی", family: "تست", cell: "09121234567", from_iso: new Date().toISOString() };
+    state._allPatients = [mockPatient];
+    const card = el("patient-card");
+    card.classList.remove("hidden");
+    el("center-select").innerHTML = '<option value="mock">مرکز تست</option>';
+    renderPatientCards([mockPatient], "");
+  }
+
+  async function loadPatients() {
+    
+    const card = el("patient-card");
+    card.classList.remove("hidden");
+    const centerSelect = el("center-select");
+    centerSelect.innerHTML = "";
+
+    try {
+      const centersData = await apiGet("/api/v1/medical-centers");
+      const centers = centersData.centers || [];
+      if (!centers.length) {
+        centerSelect.innerHTML = `<option value="">مرکز درمانی یافت نشد</option>`;
+        patientSelect.innerHTML = `<option value="">—</option>`;
+        return;
+      }
+      centerSelect.innerHTML = centers
+        .map((c) => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.name || c.id)}</option>`)
+        .join("");
+      centerSelect.onchange = () => {
+        state._allPatients = [];
+        state.selectedAppointment = null;
+        loadPatientsForCenter(centerSelect.value);
+      };
+      el("patient-search").oninput = () => renderPatientCards(state._allPatients || [], el("patient-search").value);
+      await loadPatientsForCenter(centers[0].id);
+    } catch (err) {
+      patientSelect.innerHTML = `<option value="">خطا در بارگذاری نوبت‌ها</option>`;
+      showError(err.message);
+    }
+  }
+
+  function renderPatientCards(patients, filter) {
+    const list = el("patient-list");
+    const q = (filter || "").trim().toLowerCase();
+    const filtered = q
+      ? patients.filter((p) =>
+          (p.name + " " + p.family + " " + p.cell).toLowerCase().includes(q)
+        )
+      : patients;
+
+    if (!filtered.length) {
+      list.innerHTML = `<div class="patient-empty">${q ? "بیماری با این مشخصات پیدا نشد" : "نوبتی برای امروز ثبت نشده"}</div>`;
+      return;
+    }
+    list.innerHTML = "";
+    filtered.forEach((p) => {
+      const div = document.createElement("div");
+      div.className = "patient-card-item" + (state.selectedAppointment?.appointment_id === p.appointment_id ? " selected" : "");
+      const timeStr = p.from_iso ? new Date(p.from_iso).toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit" }) : "";
+      div.innerHTML = `
+        <div>
+          <div class="p-name">${escapeHtml(p.name)} ${escapeHtml(p.family)}</div>
+          <div class="p-meta">${escapeHtml(p.cell)}${p.national_code ? " · " + escapeHtml(p.national_code) : ""}</div>
+        </div>
+        ${timeStr ? `<div class="p-time">${timeStr}</div>` : ""}
+      `;
+      div.addEventListener("click", () => {
+        state.selectedAppointment = p;
+        list.querySelectorAll(".patient-card-item").forEach((c) => c.classList.remove("selected"));
+        div.classList.add("selected");
+        loadPrevRecords(p.cell);
+      });
+      list.appendChild(div);
+    });
+  }
+
+  async function loadPatientsForCenter(centerId) {
+    const list = el("patient-list");
+    list.innerHTML = `<div class="patient-empty">در حال بارگذاری...</div>`;
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const data = await apiGet(
+        `/api/v1/patients?center_id=${encodeURIComponent(centerId)}&date_start=${today}&date_end=${today}`
+      );
+      state._allPatients = data.patients || [];
+      renderPatientCards(state._allPatients, el("patient-search").value);
+    } catch (err) {
+      list.innerHTML = `<div class="patient-empty">خطا در بارگذاری نوبت‌ها</div>`;
+      showError(err.message);
+    }
+  }
+
+  el("btn-connect").addEventListener("click", async () => {
+    const btn = el("btn-connect");
+    btn.disabled = true;
+    btn.textContent = "در حال اتصال...";
+    await authenticate();
+    if (!state.accessToken) {
+      btn.disabled = false;
+      btn.textContent = "تلاش دوباره";
+    } else {
+      btn.textContent = "متصل شد ✓";
+      el("btn-record").disabled = false;
+    }
+  });
+
+  async function loadPrevRecords(cell) {
+    if (!cell) return;
+    const section = el("prev-records-section");
+    const listEl = el("prev-records-list");
+    section.classList.remove("hidden");
+    listEl.innerHTML = `<div style="font-size:12px; color:var(--ink-soft); padding:6px 0;">در حال بارگذاری...</div>`;
+    try {
+      const data = await apiGet(`/api/v1/records?patient_cell=${encodeURIComponent(cell)}`);
+      const records = data.records || [];
+      if (!records.length) {
+        listEl.innerHTML = `<div style="font-size:12px; color:var(--ink-soft); padding:6px 0;">پرونده قبلی ثبت نشده</div>`;
+        return;
+      }
+      listEl.innerHTML = "";
+      records.forEach((r) => {
+        const div = document.createElement("div");
+        div.className = "prev-record-item";
+        div.innerHTML = `
+          <div class="prev-record-header">
+            <span class="prev-record-date">📅 ${escapeHtml(r.created_at || "")}</span>
+          </div>
+          <div class="prev-record-section-title">یادداشت پزشک</div>
+          <div class="prev-record-text">${escapeHtml(r.yaddasht_pezeshk || "—")}</div>
+          ${r.tarikh_moraje_baad || r.khaleseh_moraje_baad ? `
+            <div class="prev-record-section-title">مراجعه بعدی</div>
+            <div class="prev-record-moraje">
+              ${r.tarikh_moraje_baad ? `<strong>تاریخ:</strong> ${escapeHtml(r.tarikh_moraje_baad)}<br>` : ""}
+              ${escapeHtml(r.khaleseh_moraje_baad || "")}
+            </div>` : ""}
+        `;
+        listEl.appendChild(div);
+      });
+    } catch (err) {
+      listEl.innerHTML = `<div style="font-size:12px; color:var(--danger);">خطا در بارگذاری پرونده‌های قبلی</div>`;
+    }
+  }
+
+  function showPrevRecord(r) {
+    // فقط یادداشت پزشک و خلاصه مراجعه بعدی نمایش داده می‌شه
+    return; // کارت inline نشون می‌ده، نیازی به alert نیست
+  }
+
+  el("btn-record").addEventListener("click", async () => {
+    if (!state.recording) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        state.mediaRecorder = new MediaRecorder(stream);
+        state.chunks = [];
+        state.mediaRecorder.ondataavailable = (e) => state.chunks.push(e.data);
+        state.mediaRecorder.start();
+        state.recording = true;
+        state.seconds = 0;
+        state.timerHandle = setInterval(() => {
+          state.seconds++;
+          const m = String(Math.floor(state.seconds / 60)).padStart(2, "0");
+          const s = String(state.seconds % 60).padStart(2, "0");
+          el("timer").textContent = `${m}:${s}`;
+        }, 1000);
+        el("btn-record").textContent = "توقف ضبط";
+        el("btn-record").classList.replace("btn-primary", "btn-danger");
+        el("btn-submit").disabled = true;
+      } catch (err) {
+        showError("دسترسی به میکروفون داده نشد.");
+      }
+    } else {
+      state.mediaRecorder.stop();
+      state.mediaRecorder.stream.getTracks().forEach((t) => t.stop());
+      state.recording = false;
+      clearInterval(state.timerHandle);
+      el("btn-record").textContent = "شروع ضبط";
+      el("btn-record").classList.replace("btn-danger", "btn-primary");
+      el("btn-submit").disabled = false;
+    }
+  });
+
+  el("file-input").addEventListener("change", (e) => {
+    state.pickedFile = e.target.files[0] || null;
+    if (state.pickedFile) el("btn-submit").disabled = false;
+  });
+
+  el("btn-submit").addEventListener("click", async () => {
+    hideError();
+    const btn = el("btn-submit");
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> در حال پردازش...';
+
+    try {
+      const formData = new FormData();
+      if (state.pickedFile) {
+        formData.append("audio", state.pickedFile, state.pickedFile.name);
+      } else if (state.chunks.length) {
+        const blob = new Blob(state.chunks, { type: "audio/webm" });
+        formData.append("audio", blob, "visit.webm");
+      } else {
+        throw new Error("ابتدا صدا را ضبط کن یا فایلی انتخاب کن.");
+      }
+
+      const resp = await fetch(`${CONFIG.BACKEND_BASE_URL}/api/v1/visit-notes`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${state.accessToken}` },
+        body: formData,
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data?.detail?.message || "خطا در پردازش ویزیت.");
+
+      state.lastNote = data.note;
+      renderNote(data.note);
+      el("input-card").classList.add("hidden");
+      el("result-card").classList.remove("hidden");
+    } catch (err) {
+      showError(err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "تبدیل به پرونده";
+    }
+  });
+
+  function renderNote(note) {
+    el("chk-doctor-review").checked = false;
+    el("btn-confirm").disabled = true;
+    el("chat-status").className = "sms-status hidden";
+
+    // نمایش بیمار انتخاب‌شده
+    const spBox = el("selected-patient-box");
+    const noPtWarn = el("no-patient-warn");
+    const btnChat = el("btn-send-chat");
+    if (state.selectedAppointment) {
+      const p = state.selectedAppointment;
+      el("sp-name").textContent = (p.name || "") + " " + (p.family || "");
+      el("sp-meta").textContent = p.cell || "";
+      el("sp-time").textContent = p.from_iso
+        ? new Date(p.from_iso).toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit" })
+        : "";
+      spBox.classList.remove("hidden");
+      spBox.style.display = "flex";
+      noPtWarn.style.display = "none";
+      btnChat.disabled = false;
+    } else {
+      spBox.classList.add("hidden");
+      noPtWarn.style.display = "flex";
+      btnChat.disabled = true;
+    }
+    el("f-yaddasht").value = note.yaddasht_pezeshk || "";
+    el("f-khaleseh-bimar").value = note.khaleseh_bimar || "";
+    el("f-tarikh").value = note.peygiriha?.tarikh_moraje_baad || "";
+    el("f-khaleseh-moraje").value = note.khaleseh_moraje_baad || "";
+
+    const drugList = el("drug-list");
+    drugList.innerHTML = "";
+    (note.list_daroha || []).forEach((d) => addDrugRow(d));
+    if (!note.list_daroha || note.list_daroha.length === 0) addDrugRow();
+
+    renderTags("azmayeshat-tags", note.peygiriha?.azmayeshat || [], "ok");
+    renderTags("alaem-tags", note.peygiriha?.alaem_hoshdar || [], "warn");
+  }
+
+  const UNSPECIFIED = "نامشخص - نیاز به تکمیل توسط پزشک";
+  const DRUG_PLACEHOLDERS = {
+    nam: "نام دارو (مثال: آموکسی‌سیلین ۵۰۰mg)",
+    doz: "دوز (مثال: یک کپسول)",
+    zaman_masraf: "زمان مصرف (مثال: روزی ۳ بار بعد از غذا)",
+    modat: "مدت (مثال: ۷ روز)",
+  };
+
+  function drugInputHtml(defaultPlaceholder, value, field) {
+    const isUnspecified = value === UNSPECIFIED;
+    const ph = isUnspecified ? UNSPECIFIED : (DRUG_PLACEHOLDERS[field] || defaultPlaceholder);
+    const val = isUnspecified ? "" : escapeHtml(value);
+    return `<input type="text" placeholder="${escapeHtml(ph)}" value="${val}" data-field="${field}" />`;
+  }
+
+  function addDrugRow(drug) {
+    drug = drug || { nam: "", doz: "", zaman_masraf: "", modat: "" };
+    const row = document.createElement("div");
+    row.className = "drug-item";
+    row.innerHTML = `
+      <button type="button" class="drug-remove" aria-label="حذف دارو">✕</button>
+      ${drugInputHtml("نام دارو (مثال: آموکسی‌سیلین ۵۰۰mg)", drug.nam, "nam")}
+      <div class="drug-field-wrap">
+        <label>دوز</label>
+        ${drugInputHtml("مثال: یک کپسول", drug.doz, "doz")}
+      </div>
+      <div class="drug-field-wrap">
+        <label>زمان مصرف</label>
+        ${drugInputHtml("مثال: روزی ۳ بار", drug.zaman_masraf, "zaman_masraf")}
+      </div>
+      <div class="drug-field-wrap" style="grid-column: 1 / -1;">
+        <label>مدت درمان</label>
+        ${drugInputHtml("مثال: ۷ روز", drug.modat, "modat")}
+      </div>
+    `;
+    row.querySelector(".drug-remove").addEventListener("click", () => row.remove());
+    el("drug-list").appendChild(row);
+  }
+    el("btn-add-drug").addEventListener("click", () => addDrugRow());
+
+  el("chk-doctor-review").addEventListener("change", () => {
+    el("btn-confirm").disabled = !el("chk-doctor-review").checked;
+  });
+
+  // ---------------------------------------------------------------
+  // تقویم شمسی (بدون کتابخانه‌ی خارجی) برای فیلد «تاریخ مراجعه بعد»
+  // ---------------------------------------------------------------
+  const JALALI_MONTHS = ["فروردین","اردیبهشت","خرداد","تیر","مرداد","شهریور","مهر","آبان","آذر","دی","بهمن","اسفند"];
+
+  function gregorianToJalali(gy, gm, gd) {
+    const g_d_m = [0,31,59,90,120,151,181,212,243,273,304,334];
+    let jy = (gy <= 1600) ? 0 : 979;
+    gy -= (gy <= 1600) ? 621 : 1600;
+    const gy2 = (gm > 2) ? (gy + 1) : gy;
+    let days = (365 * gy) + Math.floor((gy2 + 3) / 4) - Math.floor((gy2 + 99) / 100)
+      + Math.floor((gy2 + 399) / 400) - 80 + gd + g_d_m[gm - 1];
+    jy += 33 * Math.floor(days / 12053);
+    days %= 12053;
+    jy += 4 * Math.floor(days / 1461);
+    days %= 1461;
+    if (days > 365) { jy += Math.floor((days - 1) / 365); days = (days - 1) % 365; }
+    const jm = (days < 186) ? 1 + Math.floor(days / 31) : 7 + Math.floor((days - 186) / 30);
+    const jd = 1 + ((days < 186) ? (days % 31) : ((days - 186) % 30));
+    return [jy, jm, jd];
+  }
+
+  function isJalaliLeap(jy) {
+    const cycle = ((jy - (jy > 0 ? 474 : 473)) % 2820 + 2820) % 2820;
+    return ((cycle + 474 + 38) * 682 % 2816) < 682;
+  }
+  function jalaliMonthLength(jy, jm) {
+    if (jm <= 6) return 31;
+    if (jm <= 11) return 30;
+    return isJalaliLeap(jy) ? 30 : 29;
+  }
+
+  // تبدیل تاریخ شمسی به میلادی (برای محاسبه‌ی دقیق روز هفته‌ی شروع هر ماه)
+  function div(a, b) { return Math.floor(a / b); }
+  function jalaliToGregorian(jy, jm, jd) {
+    jy += 1595;
+    let days = -355668 + (365 * jy) + (div(jy, 33) * 8) + div(((jy % 33) + 3), 4) + jd
+      + ((jm < 7) ? (jm - 1) * 31 : ((jm - 7) * 30) + 186);
+    let gy = 400 * div(days, 146097);
+    days %= 146097;
+    if (days > 36524) {
+      gy += 100 * div(--days, 36524);
+      days %= 36524;
+      if (days >= 365) days++;
+    }
+    gy += 4 * div(days, 1461);
+    days %= 1461;
+    if (days > 365) {
+      gy += div(days - 1, 365);
+      days = (days - 1) % 365;
+    }
+    let gd = days + 1;
+    const salA = [0, 31, (gy % 4 === 0 && gy % 100 !== 0) || gy % 400 === 0 ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    let gm = 0;
+    for (gm = 1; gm <= 12 && gd > salA[gm]; gm++) gd -= salA[gm];
+    return [gy, gm, gd];
+  }
+
+  const todayG = new Date();
+  const [todayJY, todayJM, todayJD] = gregorianToJalali(todayG.getFullYear(), todayG.getMonth() + 1, todayG.getDate());
+  const calState = { jy: todayJY, jm: todayJM };
+
+  function renderCalendar() {
+    const box = el("jalali-calendar");
+    const len = jalaliMonthLength(calState.jy, calState.jm);
+    // فروردین سال ۱ برابر است با ۲۲ مارس؛ برای محاسبه‌ی روز هفته‌ی شروع ماه از یک تاریخ لنگر استفاده می‌کنیم
+    const anchor = jalaliToGregorian(calState.jy, calState.jm, 1);
+    const firstDow = (new Date(anchor[0], anchor[1] - 1, anchor[2]).getDay() + 1) % 7; // تبدیل به هفته‌ی شنبه-محور
+
+    let html = `<div class="jc-header">
+      <button type="button" data-nav="-1">›</button>
+      <span>${JALALI_MONTHS[calState.jm - 1]} ${calState.jy}</span>
+      <button type="button" data-nav="1">‹</button>
+    </div><div class="jc-grid">`;
+    ["ش","ی","د","س","چ","پ","ج"].forEach((d) => (html += `<span class="jc-dow">${d}</span>`));
+    for (let i = 0; i < firstDow; i++) html += `<button class="jc-empty" disabled></button>`;
+    for (let d = 1; d <= len; d++) {
+      const isToday = d === todayJD && calState.jm === todayJM && calState.jy === todayJY;
+      html += `<button type="button" class="${isToday ? "jc-today" : ""}" data-day="${d}">${d}</button>`;
+    }
+    html += `</div><div class="jc-footer">
+      <button type="button" id="jc-today-btn">امروز</button>
+      <button type="button" id="jc-close-btn">بستن</button>
+    </div>`;
+    box.innerHTML = html;
+
+    box.querySelectorAll("[data-nav]").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        calState.jm += parseInt(btn.dataset.nav, 10);
+        if (calState.jm > 12) { calState.jm = 1; calState.jy++; }
+        if (calState.jm < 1) { calState.jm = 12; calState.jy--; }
+        renderCalendar();
+      });
+    });
+    box.querySelectorAll("[data-day]").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const d = String(btn.dataset.day).padStart(2, "0");
+        const m = String(calState.jm).padStart(2, "0");
+        el("f-tarikh").value = `${calState.jy}/${m}/${d}`;
+        box.classList.add("hidden");
+      });
+    });
+    el("jc-today-btn").addEventListener("click", (e) => {
+      e.stopPropagation();
+      calState.jy = todayJY; calState.jm = todayJM;
+      renderCalendar();
+    });
+    el("jc-close-btn").addEventListener("click", (e) => {
+      e.stopPropagation();
+      box.classList.add("hidden");
+    });
+  }
+
+  el("btn-open-calendar").addEventListener("click", (e) => {
+    e.stopPropagation();
+    const box = el("jalali-calendar");
+    const willShow = box.classList.contains("hidden");
+    if (willShow) { calState.jy = todayJY; calState.jm = todayJM; renderCalendar(); }
+    box.classList.toggle("hidden", !willShow);
+  });
+  document.addEventListener("click", (e) => {
+    const box = el("jalali-calendar");
+    if (!box.contains(e.target) && e.target.id !== "btn-open-calendar") box.classList.add("hidden");
+  });
+
+  function renderTags(containerId, items, variant) {
+    const c = el(containerId);
+    c.innerHTML = "";
+    if (!items.length) {
+      c.innerHTML = `<span class="hint">موردی ثبت نشده</span>`;
+      return;
+    }
+    items.forEach((t) => {
+      const span = document.createElement("span");
+      span.className = "tag" + (variant === "warn" ? " warn" : "");
+      span.innerHTML = `<span>${escapeHtml(t)}</span><button type="button" class="tag-remove" aria-label="حذف">✕</button>`;
+      span.querySelector(".tag-remove").addEventListener("click", () => {
+        const i = items.indexOf(t);
+        if (i > -1) items.splice(i, 1);
+        renderTags(containerId, items, variant);
+      });
+      c.appendChild(span);
+    });
+  }
+
+  function escapeHtml(str) {
+    return String(str || "").replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+  }
+
+  el("btn-confirm").addEventListener("click", async () => {
+    const btn = el("btn-confirm");
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> در حال ذخیره...';
+
+    const drugRows = Array.from(document.querySelectorAll(".drug-item")).map((row) => {
+      const obj = {};
+      row.querySelectorAll("input").forEach((inp) => (obj[inp.dataset.field] = inp.value.trim()));
+      return obj;
+    }).filter((d) => d.nam);
+
+    const finalNote = {
+      yaddasht_pezeshk: el("f-yaddasht").value.trim(),
+      khaleseh_bimar: el("f-khaleseh-bimar").value.trim(),
+      list_daroha: drugRows,
+      peygiriha: {
+        azmayeshat: state.lastNote?.peygiriha?.azmayeshat || [],
+        tarikh_moraje_baad: el("f-tarikh").value.trim(),
+        alaem_hoshdar: state.lastNote?.peygiriha?.alaem_hoshdar || [],
+      },
+      khaleseh_moraje_baad: el("f-khaleseh-moraje").value.trim(),
+    };
+
+    const p = state.selectedAppointment || {};
+    const body = {
+      appointment_id: p.appointment_id || null,
+      patient_name: p.name || "",
+      patient_family: p.family || "",
+      patient_cell: p.cell || "",
+      note: finalNote,
+    };
+
+    try {
+      const resp = await fetch(`${CONFIG.BACKEND_BASE_URL}/api/v1/records`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${state.accessToken}` },
+        body: JSON.stringify(body),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data?.detail?.message || "خطا در ذخیره پرونده.");
+      const chatMsg = data.chat_sent ? " و به گفتگوی بیمار ارسال شد." : ".";
+      btn.textContent = "✓ ذخیره شد";
+      showChatStatus(true, `پرونده با موفقیت ذخیره شد${chatMsg}`);
+      if (p.cell) loadPrevRecords(p.cell);
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = "تأیید و ذخیره در پرونده";
+      showChatStatus(false, err.message);
+    }
+  });
+
+  el("btn-next-visit").addEventListener("click", () => {
+    // برگشت به صفحه اول بدون نیاز به اتصال مجدد
+    el("result-card").classList.add("hidden");
+    el("input-card").classList.remove("hidden");
+    el("timer").textContent = "۰۰:۰۰";
+    el("btn-submit").disabled = true;
+    state.chunks = [];
+    state.pickedFile = null;
+    el("file-input").value = "";
+    state.selectedAppointment = null;
+    el("chat-status").className = "sms-status hidden";
+    // لود مجدد بیماران بدون اتصال مجدد
+    if (state.accessToken) loadPatients();
+  });
+
+  el("btn-add-azmayesh").addEventListener("click", () => {
+    const inp = el("azmayesh-input");
+    const val = inp.value.trim();
+    if (!val) return;
+    if (!state.lastNote) state.lastNote = { peygiriha: { azmayeshat: [], alaem_hoshdar: [] } };
+    if (!state.lastNote.peygiriha) state.lastNote.peygiriha = { azmayeshat: [], alaem_hoshdar: [] };
+    if (!state.lastNote.peygiriha.azmayeshat) state.lastNote.peygiriha.azmayeshat = [];
+    state.lastNote.peygiriha.azmayeshat.push(val);
+    renderTags("azmayeshat-tags", state.lastNote.peygiriha.azmayeshat, "ok");
+    inp.value = "";
+  });
+  el("azmayesh-input").addEventListener("keydown", (e) => { if (e.key === "Enter") el("btn-add-azmayesh").click(); });
+
+  el("btn-add-alaem").addEventListener("click", () => {
+    const inp = el("alaem-input");
+    const val = inp.value.trim();
+    if (!val) return;
+    if (!state.lastNote) state.lastNote = { peygiriha: { azmayeshat: [], alaem_hoshdar: [] } };
+    if (!state.lastNote.peygiriha) state.lastNote.peygiriha = { azmayeshat: [], alaem_hoshdar: [] };
+    if (!state.lastNote.peygiriha.alaem_hoshdar) state.lastNote.peygiriha.alaem_hoshdar = [];
+    state.lastNote.peygiriha.alaem_hoshdar.push(val);
+    renderTags("alaem-tags", state.lastNote.peygiriha.alaem_hoshdar, "warn");
+    inp.value = "";
+  });
+  el("alaem-input").addEventListener("keydown", (e) => { if (e.key === "Enter") el("btn-add-alaem").click(); });
+
+  el("btn-discard").addEventListener("click", () => {
+    el("result-card").classList.add("hidden");
+    el("input-card").classList.remove("hidden");
+    el("timer").textContent = "۰۰:۰۰";
+    el("btn-submit").disabled = true;
+    state.chunks = [];
+    state.pickedFile = null;
+    el("file-input").value = "";
+  });
+
+
+
+  el("btn-send-chat").addEventListener("click", async () => {
+    const btn = el("btn-send-chat");
+    if (!state.selectedAppointment) {
+      showChatStatus(false, "ابتدا یک بیمار را از بخش «انتخاب بیمار» انتخاب کن.");
+      return;
+    }
+    const drugsText = (state.lastNote?.list_daroha || [])
+      .map((d) => `- ${d.nam}: ${d.doz}, ${d.zaman_masraf}, ${d.modat}`)
+      .join("\n");
+    const content = [
+      el("f-khaleseh-bimar").value.trim(),
+      drugsText ? `داروها:\n${drugsText}` : "",
+      el("f-tarikh").value.trim() ? `مراجعه بعد: ${el("f-tarikh").value.trim()}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+
+    if (!content) {
+      showChatStatus(false, "متنی برای ارسال موجود نیست.");
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "در حال ارسال...";
+    try {
+      const resp = await fetch(`${CONFIG.BACKEND_BASE_URL}/api/v1/send-to-chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${state.accessToken}` },
+        body: JSON.stringify({ appointment_id: state.selectedAppointment.appointment_id, content }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data?.detail?.message || "ارسال به گفتگوی بیمار ناموفق بود.");
+      showChatStatus(true, "یادداشت با موفقیت به گفتگوی بیمار ارسال شد.");
+    } catch (err) {
+      showChatStatus(false, err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "ارسال به گفتگوی بیمار";
+    }
+  });
+
+  function showChatStatus(ok, text) {
+    const box = el("chat-status");
+    box.textContent = text;
+    box.className = "sms-status " + (ok ? "ok" : "bad");
+    box.classList.remove("hidden");
+  }
+
+  function showError(msg) {
+    const box = el("error-box");
+    box.innerHTML = `<span class="warn-icon">⚠</span><span class="warn-text">${escapeHtml(msg)}</span><button type="button" class="warn-dismiss">بستن</button>`;
+    box.querySelector(".warn-dismiss").addEventListener("click", hideError);
+    box.classList.remove("hidden");
+  }
+  function hideError() {
+    el("error-box").classList.add("hidden");
+  }
+
+})();
+</script>
+</body>
+</html>
