@@ -9,6 +9,4 @@ __pycache__/
 logs/
 uploads/
 temp_audio/
-.vscode/
-.idea/
 .DS_Store
